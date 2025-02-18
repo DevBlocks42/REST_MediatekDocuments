@@ -46,8 +46,11 @@ class MyAccessBDD extends AccessBDD {
             case "etat" :
                 // select portant sur une table contenant juste id et libelle
                 return $this->selectTableSimple($table);
-            case "" :
-                // return $this->uneFonction(parametres);
+            case "suivi" :
+                // select portant sur une table contenant juste id et libelle
+                return $this->selectTableSimple($table);
+            case "commandes" :
+                 return $this->selectAllCommandes($champs);
             default:
                 // cas général
                 return $this->selectTuplesOneTable($table, $champs);
@@ -63,9 +66,9 @@ class MyAccessBDD extends AccessBDD {
      */	
     protected function traitementInsert(string $table, ?array $champs) : ?int{
         switch($table){
-            case "" :
-                // return $this->uneFonction(parametres);
-            default:                    
+            case "insert_commande" :
+                return $this->insererCommandeDocument($champs);
+            default:      
                 // cas général
                 return $this->insertOneTupleOneTable($table, $champs);	
         }
@@ -128,7 +131,6 @@ class MyAccessBDD extends AccessBDD {
             return $this->conn->queryBDD($requete, $champs);
         }
     }	
-
     /**
      * demande d'ajout (insert) d'un tuple dans une table
      * @param string $table
@@ -154,6 +156,7 @@ class MyAccessBDD extends AccessBDD {
         $requete = substr($requete, 0, strlen($requete)-1);
         $requete .= ");";
         return $this->conn->updateBDD($requete, $champs);
+        
     }
 
     /**
@@ -178,7 +181,8 @@ class MyAccessBDD extends AccessBDD {
         // (enlève la dernière virgule)
         $requete = substr($requete, 0, strlen($requete)-1);				
         $champs["id"] = $id;
-        $requete .= " where id=:id;";		
+        $requete .= " where id=:id;";	
+        file_put_contents("./test.txt", $champs['id']);	
         return $this->conn->updateBDD($requete, $champs);	        
     }
     
@@ -275,6 +279,32 @@ class MyAccessBDD extends AccessBDD {
         $requete .= "where e.id = :id ";
         $requete .= "order by e.dateAchat DESC";
         return $this->conn->queryBDD($requete, $champNecessaire);
-    }		    
-    
+    }	
+    /**
+     * récupère toutes les commandes d'un document de type livre
+     * @param array|null $champs 
+     * @return array|null
+     */
+    private function selectAllCommandes(?array $champs) : ?array {
+        if(empty($champs) || !array_key_exists('idLivreDvd', $champs)) {
+            return null;
+        }
+        $champNecessaire['idLivreDvd'] = $champs['idLivreDvd']; 
+        $requete = "SELECT commande.id, dateCommande, montant, idLivreDvd, idSuivi, nbExemplaire FROM commandedocument JOIN commande ON commande.id = commandedocument.id WHERE idLivreDvd = :idLivreDvd ORDER BY dateCommande DESC";
+        return $this->conn->queryBDD($requete, $champNecessaire);
+    }
+    private function insererCommandeDocument($champs) : ?int
+    {
+        if(empty($champs)) {
+            return null;
+        }
+        $requete = "INSERT INTO commande (dateCommande, montant) VALUES(:dateCommande, :montant);";
+        $requete .= " INSERT INTO commandedocument (id, idSuivi, idLivreDvd, nbExemplaire) VALUES((SELECT MAX(id) FROM commande), :idSuivi, :idLivreDvd, :nbExemplaire);";
+        $champNecessaire['dateCommande'] = $champs['dateCommande'];
+        $champNecessaire['montant'] = $champs['montant'];
+        $champNecessaire['idSuivi'] = $champs['idSuivi'];
+        $champNecessaire['idLivreDvd'] = $champs['idLivreDvd'];
+        $champNecessaire['nbExemplaire'] = $champs['nbExemplaire'];
+        return $this->conn->updateBDD($requete, $champNecessaire);
+    }	  
 }

@@ -75,7 +75,7 @@ class Url {
      * @param string $format
      * @return string|array|null
      */
-    public function recupVariable(string $nom, string $format="string") : string|array|null{
+    public function recupVariable(string $nom, string $format="string") /*: string|array|null*/ {
         $variable = $this->data[$nom] ?? '';
         switch ($format){
             case "json" : 
