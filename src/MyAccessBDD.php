@@ -51,6 +51,10 @@ class MyAccessBDD extends AccessBDD {
                 return $this->selectTableSimple($table);
             case "commandes" :
                  return $this->selectAllCommandes($champs);
+            case "abonnements" :
+                return $this->selectAllAbonnements($champs);
+            case "abonnements_30jours":
+                return $this->getAbonnementsExpirationProche($champs);
             default:
                 // cas général
                 return $this->selectTuplesOneTable($table, $champs);
@@ -68,6 +72,8 @@ class MyAccessBDD extends AccessBDD {
         switch($table){
             case "insert_commande" :
                 return $this->insererCommandeDocument($champs);
+            case "insert_abonnement" :
+                return $this->insererAbonnementRevue($champs);
             default:      
                 // cas général
                 return $this->insertOneTupleOneTable($table, $champs);	
@@ -281,7 +287,7 @@ class MyAccessBDD extends AccessBDD {
         return $this->conn->queryBDD($requete, $champNecessaire);
     }	
     /**
-     * récupère toutes les commandes d'un document de type livre
+     * Récupère toutes les commandes d'un document de type livre
      * @param array|null $champs 
      * @return array|null
      */
@@ -291,6 +297,24 @@ class MyAccessBDD extends AccessBDD {
         }
         $champNecessaire['idLivreDvd'] = $champs['idLivreDvd']; 
         $requete = "SELECT commande.id, dateCommande, montant, idLivreDvd, idSuivi, nbExemplaire FROM commandedocument JOIN commande ON commande.id = commandedocument.id WHERE idLivreDvd = :idLivreDvd ORDER BY dateCommande DESC";
+        return $this->conn->queryBDD($requete, $champNecessaire);
+    }
+    private function selectAllAbonnements(?array $champs) : ?array 
+    {
+        if(empty($champs)) {
+            return null;
+        }
+        $requete = "SELECT commande.id, commande.dateCommande, commande.montant, abonnement.dateFinAbonnement, abonnement.idRevue FROM commande JOIN abonnement ON commande.id = abonnement.id WHERE idRevue=:idRevue ORDER BY dateCommande DESC";
+        $champNecessaire["idRevue"] = $champs["idRevue"];
+        return $this->conn->queryBDD($requete, $champNecessaire);
+    }
+    private function getAbonnementsExpirationProche($champs) : ?array
+    {
+        if(empty($champs)) {
+            return null;
+        }
+        $requete = "SELECT commande.id, commande.dateCommande, commande.montant, abonnement.dateFinAbonnement, abonnement.idRevue FROM commande JOIN abonnement ON commande.id = abonnement.id WHERE dateFinAbonnement <= :maxDate AND dateFinAbonnement >= NOW() ORDER BY dateFinAbonnement ASC";
+        $champNecessaire['maxDate'] = $champs['maxDate'];
         return $this->conn->queryBDD($requete, $champNecessaire);
     }
     private function insererCommandeDocument($champs) : ?int
@@ -307,4 +331,17 @@ class MyAccessBDD extends AccessBDD {
         $champNecessaire['nbExemplaire'] = $champs['nbExemplaire'];
         return $this->conn->updateBDD($requete, $champNecessaire);
     }	  
+    private function insererAbonnementRevue($champs) : ?int 
+    {
+        if(empty($champs)) {
+            return null;
+        }
+        $requete = "INSERT INTO commande (dateCommande, montant) VALUES(:dateCommande, :montant);";
+        $requete .= " INSERT INTO abonnement (id, dateFinAbonnement, idRevue) VALUES((SELECT MAX(id) FROM commande), :dateFinAbonnement, :idRevue);";
+        $champNecessaire['dateCommande'] = $champs['dateCommande'];
+        $champNecessaire['montant'] = $champs['montant'];
+        $champNecessaire['dateFinAbonnement'] = $champs['dateFinAbonnement'];
+        $champNecessaire['idRevue'] = $champs['idRevue'];
+        return $this->conn->updateBDD($requete, $champNecessaire);
+    }
 }
