@@ -310,7 +310,7 @@ class MyAccessBDD extends AccessBDD {
     }
     private function getAbonnementsExpirationProche($champs) : ?array
     {
-        if(empty($champs)) {
+        if(empty($champs)) {  
             return null;
         }
         $requete = "SELECT commande.id, commande.dateCommande, commande.montant, abonnement.dateFinAbonnement, abonnement.idRevue FROM commande JOIN abonnement ON commande.id = abonnement.id WHERE dateFinAbonnement <= :maxDate AND dateFinAbonnement >= NOW() ORDER BY dateFinAbonnement ASC";
