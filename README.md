@@ -69,4 +69,9 @@ Dans MyAccessBDD, plusieurs fonctions ont été ajoutées pour répondre aux dem
    <li><strong>selectAllDvd : </strong>même chose pour les dvd.</li>
    <li><strong>selectAllRevues : </strong>même chose pour les revues.</li>
    <li><strong>selectExemplairesRevue : </strong>récupère les exemplaires d'une revue dont l'id sera donné.</li>
+   <li><strong> selectAllCommandes : </strong> récupère toutes les commandes concernant un livre ou dvd.</li>
+   <li><strong> selectAllAbonnements : </strong> récupère tous les abonnements concernant une revue.</li>
+   <li><strong> getAbonnementsExpirationProche : </strong> récupère tous les abonnements dont la date de fin est dans moins de 30 jours.</li>
+   <li><strong> insererCommandeDocument : </strong> insère une nouvelle commande de document dans la base de données.</li>
+   <li><strong> insererAbonnementRevue : </strong> insère un nouvel abonnement de revue dans la base de données.</li>
 </ul>
